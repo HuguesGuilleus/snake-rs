@@ -1,3 +1,4 @@
+mod candy;
 mod wall;
 use crate::wall::Wall;
 
