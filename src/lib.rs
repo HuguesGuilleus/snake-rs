@@ -52,17 +52,20 @@ pub enum Control {
     Down,
 }
 
+#[derive(Debug)]
 pub struct BoardDimension {
     width: usize,
     height: usize,
 }
 
+#[derive(Debug)]
 pub struct Board {
     width: usize,
     height: usize,
     walls: Vec<Wall>,
 }
 impl Board {
+    /// Create a new baord with a cross walls.
     pub fn new(dimension: BoardDimension) -> Self {
         let x = dimension.width / 2;
         let y = dimension.height / 2;
@@ -78,10 +81,12 @@ impl Board {
         }
     }
 
+    /// Play at this game.
     pub fn play(control: impl Iterator<Item = Control>, view: impl View) -> Option<usize> {
         unimplemented!()
     }
 
+    // Return true if the point is on a wall.
     fn on_wall(&self, x: usize, y: usize) -> bool {
         self.walls.iter().any(move |w| w.over(x, y))
     }

@@ -1,4 +1,5 @@
-/// On wall where the snake can't go over.
+/// On wall where the snake can't go over. I't a rectangle.
+#[derive(Debug)]
 pub struct Wall {
     begin_x: usize,
     end_x: usize,
