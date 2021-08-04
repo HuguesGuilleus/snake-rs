@@ -1,4 +1,5 @@
 mod candy;
+mod text_view;
 mod wall;
 use crate::wall::Wall;
 
