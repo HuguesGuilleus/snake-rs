@@ -41,7 +41,9 @@ pub trait View {
 /// The result of Controler.Control()
 #[derive(Debug)]
 pub enum Control {
-    /// The gamer want to exit.
+    /// No action from player.
+    None,
+    /// The player want to exit.
     Exit,
     /// The user want go to left.
     Left,
@@ -54,7 +56,7 @@ pub enum Control {
 }
 
 #[derive(Debug)]
-pub struct BoardDimension {
+struct BoardDimension {
     width: usize,
     height: usize,
 }
@@ -67,24 +69,33 @@ pub struct Board {
 }
 impl Board {
     /// Create a new baord with a cross walls.
-    pub fn new(dimension: BoardDimension) -> Self {
-        let x = dimension.width / 2;
-        let y = dimension.height / 2;
+    pub fn new((width, height): (usize, usize)) -> Self {
+        let x = width / 2;
+        let y = height / 2;
         let walls = vec![
-            Wall::new(0, dimension.width, y, y + 1),
-            Wall::new(x, x + 1, 0, dimension.height),
+            Wall::new(0, width, y, y + 1),
+            Wall::new(x, x + 1, 0, height),
         ];
 
         Self {
-            width: dimension.width,
-            height: dimension.height,
+            width,
+            height,
             walls,
         }
     }
 
     /// Play at this game.
-    pub fn play(control: impl Iterator<Item = Control>, view: impl View) -> Option<usize> {
-        unimplemented!()
+    pub fn play(&self, mut control: impl FnMut() -> Control) -> Option<usize> {
+        // , view: impl View
+        loop {
+            let r = control();
+            match r {
+                Control::Exit => break,
+                _ => println!("{:?}", r),
+            }
+        }
+
+        None
     }
 
     // Return true if the point is on a wall.
@@ -95,10 +106,7 @@ impl Board {
 
 #[test]
 fn board_on_wall() {
-    let b = Board::new(BoardDimension {
-        width: 30,
-        height: 20,
-    });
+    let b = Board::new((30, 20));
     assert_eq!(true, b.on_wall(15, 10));
     assert_eq!(true, b.on_wall(3, 10));
     assert_eq!(true, b.on_wall(15, 19));
