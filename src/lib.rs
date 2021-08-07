@@ -1,8 +1,10 @@
-// mod candy;
+mod candy;
 mod text_view;
 mod wall;
+
+use crate::candy::Candy;
+pub use crate::text_view::TextView;
 use crate::wall::Wall;
-pub use text_view::TextView;
 
 /// Interface to print the current party.
 pub trait View {
@@ -107,8 +109,11 @@ impl Board {
     pub fn play(&self, mut control: impl FnMut() -> Control, mut view: impl View) -> Option<usize> {
         // generate candys
         let mut snake = Snake::new(self);
+        let mut candys: Vec<Candy> = (0..5).map(|_| Candy::new(self)).collect();
 
         let score = loop {
+            candys.iter_mut().for_each(|c| c.regenerate());
+
             match control() {
                 Control::Left => snake.set_direction(Direction::Left),
                 Control::Right => snake.set_direction(Direction::Right),
@@ -117,14 +122,15 @@ impl Board {
                 Control::None => {}
                 Control::Exit => break None,
             };
-
-            // regenerate candy
-
-            if snake.walk() {
+            if snake.walk(&mut candys) {
                 break Some(snake.score());
             }
 
-            view.all(&self.walls, vec![].into_iter(), &snake.body);
+            view.all(
+                &self.walls,
+                candys.iter().filter_map(|c| c.coord),
+                &snake.body,
+            );
         };
 
         view.result(score);
@@ -187,11 +193,24 @@ impl<'a> Snake<'a> {
     }
 
     /// Move the snake and return true if the snake walk over itself.
-    fn walk(&mut self) -> bool {
+    fn walk(&mut self, candys: &mut [Candy]) -> bool {
         let head = self.next();
+
         if self.board.on_wall(head) {
             true
+        } else if candys.iter_mut().any(|c: &mut Candy| c.eat(head)) {
+            self.body.push(head);
+            false
+        } else if self.body.iter().any(|b| *b == head) {
+            true
         } else {
+            for c in candys.iter_mut() {
+                if c.eat(head) {
+                    self.body.push(head);
+                    return false;
+                }
+            }
+
             let l = self.body.len() - 1;
             for i in 0..l {
                 self.body[i] = self.body[i + 1];

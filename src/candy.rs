@@ -1,5 +1,4 @@
 use crate::Board;
-use rand::rngs::ThreadRng;
 
 pub struct Candy<'a> {
     pub coord: Option<(usize, usize)>,
@@ -9,7 +8,7 @@ pub struct Candy<'a> {
 impl<'a> Candy<'a> {
     // In tick
     const LIFE_RAND: usize = 50;
-    const LIFE_MIN: usize = 30;
+    const LIFE_MIN: usize = 40;
 
     // Create a new candy.
     pub fn new(board: &'a Board) -> Self {
@@ -20,10 +19,16 @@ impl<'a> Candy<'a> {
         }
     }
 
-    /// The candy is eated by the snake.
-    pub fn eat(&mut self) {
-        self.coord = None;
-        self.expiration = Self::new_life();
+    // Is the coord is the same as the coord of this candy, the candy is eated.
+    pub fn eat(&mut self, coord: (usize, usize)) -> bool {
+        match self.coord {
+            Some(c) if c == coord => {
+                self.coord = None;
+                self.expiration = Self::new_life();
+                true
+            }
+            _ => false,
+        }
     }
 
     /// If lifetime is over, move the candy.
@@ -33,7 +38,7 @@ impl<'a> Candy<'a> {
             loop {
                 let x = rand::random::<usize>() % self.board.width;
                 let y = rand::random::<usize>() % self.board.height;
-                if self.board.on_wall(x, y) {
+                if !self.board.on_wall((x, y)) {
                     self.coord = Some((x, y));
                     break;
                 }

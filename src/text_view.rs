@@ -93,7 +93,7 @@ fn text_view() {
     let snake = vec![(2, 1), (2, 2), (2, 3)];
 
     TextView::new((3, 6), |s| {
-        if (already_write == true) {
+        if already_write == true {
             panic!("the writer closure already print");
         }
         already_write = true;
