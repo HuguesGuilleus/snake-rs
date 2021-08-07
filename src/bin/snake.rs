@@ -1,17 +1,10 @@
 use crossterm::event::KeyCode;
-use crossterm::event::KeyEvent;
 use crossterm::event::{poll, read, Event};
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use snake_rs::*;
-use std::pin::Pin;
 use std::time::Duration;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let size = crossterm::terminal::size()?;
-    println!("size: {:?}", size);
-
-    enable_raw_mode()?;
-
     let control = || -> Control {
         match poll(Duration::from_millis(100)) {
             Err(_) => Control::Exit,
@@ -23,7 +16,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     KeyCode::Right => Control::Right,
                     KeyCode::Up => Control::Up,
                     KeyCode::Down => Control::Down,
-                    KeyCode::Down => Control::Down,
                     KeyCode::Esc => Control::Exit,
                     _ => Control::None,
                 },
@@ -32,8 +24,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     };
 
-    Board::new((size.0 as usize, size.1 as usize)).play(control);
+    let output_view = |s: &str| {
+        use crossterm::{
+            cursor::MoveTo,
+            execute,
+            terminal::{Clear, ClearType},
+        };
+        use std::io::{stdout, Write};
+
+        let mut stdout = stdout();
+        execute!(stdout, MoveTo(0, 0), Clear(ClearType::All)).unwrap();
+        stdout.write_all(s.as_bytes()).unwrap();
+    };
+
+    let size = crossterm::terminal::size()?;
+    let size: (usize, usize) = (size.0 as usize, size.1 as usize);
+
+    enable_raw_mode()?;
+
+    Board::new((size.0 as usize, size.1 as usize)).play(control, TextView::new(size, output_view));
 
     disable_raw_mode()?;
+    println!("");
     Ok(())
 }

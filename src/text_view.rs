@@ -7,7 +7,6 @@ where
     W: FnMut(&str),
 {
     width: usize,
-    height: usize,
     screen: Vec<char>,
     output_buffer: String,
     output_writer: W,
@@ -35,12 +34,11 @@ impl<W> TextView<W>
 where
     W: FnMut(&str),
 {
-    fn new(dimension: BoardDimension, w: W) -> Self {
-        let capacity = dimension.height * dimension.width;
+    pub fn new((width, height): (usize, usize), w: W) -> Self {
+        let capacity = height * width;
         Self {
-            width: dimension.width,
-            height: dimension.height,
-            screen: vec![' '; dimension.height * dimension.width],
+            width,
+            screen: vec![' '; height * width],
             output_buffer: String::with_capacity(capacity),
             output_writer: w,
         }
@@ -66,8 +64,6 @@ where
         self[(x, y)] = '+';
     }
     fn print(&mut self) {
-        use std::io::Write;
-
         {
             let s = &mut self.output_buffer;
             s.clear();
@@ -96,27 +92,21 @@ fn text_view() {
     let candys = vec![(0, 1), (2, 5)];
     let snake = vec![(2, 1), (2, 2), (2, 3)];
 
-    TextView::new(
-        BoardDimension {
-            width: 3,
-            height: 6,
-        },
-        |s| {
-            if (already_write == true) {
-                panic!("the writer closure already print");
-            }
-            already_write = true;
+    TextView::new((3, 6), |s| {
+        if (already_write == true) {
+            panic!("the writer closure already print");
+        }
+        already_write = true;
 
-            let mut expected = String::new();
-            expected.push_str(" # ");
-            expected.push_str("O#+");
-            expected.push_str(" #+");
-            expected.push_str(" #+");
-            expected.push_str(" # ");
-            expected.push_str(" #O");
-            assert_eq!(&expected, s);
-        },
-    )
+        let mut expected = String::new();
+        expected.push_str(" # ");
+        expected.push_str("O#+");
+        expected.push_str(" #+");
+        expected.push_str(" #+");
+        expected.push_str(" # ");
+        expected.push_str(" #O");
+        assert_eq!(&expected, s);
+    })
     .all(&walls, candys.into_iter(), &snake);
 
     assert_eq!(true, already_write);
