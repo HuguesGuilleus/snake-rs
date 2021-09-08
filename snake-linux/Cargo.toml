@@ -8,3 +8,4 @@ edition = "2018"
 [dependencies]
 crossterm = "0.20.0"
 rand = { version = "0.8.0", features = ["std"] }
+snake = { path = "../snake" }

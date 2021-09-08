@@ -4,6 +4,7 @@ pub struct Candy<'a> {
     pub coord: Option<(usize, usize)>,
     board: &'a Board,
     expiration: usize,
+    rand: fn() -> usize,
 }
 impl<'a> Candy<'a> {
     // In tick
@@ -11,11 +12,12 @@ impl<'a> Candy<'a> {
     const LIFE_MIN: usize = 40;
 
     // Create a new candy.
-    pub fn new(board: &'a Board) -> Self {
+    pub fn new(board: &'a Board, rand: fn() -> usize) -> Self {
         Self {
             board: board,
             coord: None,
-            expiration: Self::new_life(),
+            expiration: Self::new_life(rand),
+            rand,
         }
     }
 
@@ -24,7 +26,7 @@ impl<'a> Candy<'a> {
         match self.coord {
             Some(c) if c == coord => {
                 self.coord = None;
-                self.expiration = Self::new_life();
+                self.expiration = Self::new_life(self.rand);
                 true
             }
             _ => false,
@@ -34,10 +36,10 @@ impl<'a> Candy<'a> {
     /// If lifetime is over, move the candy.
     pub fn regenerate(&mut self) {
         if self.expiration == 0 {
-            self.expiration = Self::new_life();
+            self.expiration = Self::new_life(self.rand);
             loop {
-                let x = rand::random::<usize>() % self.board.width;
-                let y = rand::random::<usize>() % self.board.height;
+                let x = (&self.rand)() % self.board.width;
+                let y = (&self.rand)() % self.board.height;
                 if !self.board.on_wall((x, y)) {
                     self.coord = Some((x, y));
                     break;
@@ -49,7 +51,7 @@ impl<'a> Candy<'a> {
     }
 
     /// Get a new random life.
-    fn new_life() -> usize {
-        Self::LIFE_MIN + rand::random::<usize>() % Self::LIFE_RAND
+    fn new_life(rand: fn() -> usize) -> usize {
+        Self::LIFE_MIN + rand() % Self::LIFE_RAND
     }
 }

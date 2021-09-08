@@ -106,10 +106,14 @@ impl Board {
     }
 
     /// Play at this game.
-    pub fn play(&self, mut control: impl FnMut() -> Control, mut view: impl View) -> Option<usize> {
+    pub fn play<C, V>(&self, rand: fn() -> usize, mut control: C, mut view: V) -> Option<usize>
+    where
+        C: FnMut() -> Control,
+        V: View,
+    {
         // generate candys
         let mut snake = Snake::new(self);
-        let mut candys: Vec<Candy> = (0..5).map(|_| Candy::new(self)).collect();
+        let mut candys: Vec<Candy> = (0..5).map(|_| Candy::new(self, rand)).collect();
 
         let score = loop {
             candys.iter_mut().for_each(|c| c.regenerate());
