@@ -105,45 +105,84 @@ impl Board {
         }
     }
 
+    /// Create a party.
+    pub fn party<'a, V: View>(&'a self, rand: fn() -> usize, view: &'a mut V) -> Party<'a, V> {
+        Party {
+            board: self,
+            snake: Snake::new(self),
+            candys: (0..5).map(|_| Candy::new(self, rand)).collect(),
+            view,
+        }
+    }
+
     /// Play at this game.
     pub fn play<C, V>(&self, rand: fn() -> usize, mut control: C, mut view: V) -> Option<usize>
     where
         C: FnMut() -> Control,
         V: View,
     {
-        // generate candys
-        let mut snake = Snake::new(self);
-        let mut candys: Vec<Candy> = (0..5).map(|_| Candy::new(self, rand)).collect();
+        let mut party = self.party(rand, &mut view);
+        while party.step(control()) {}
 
-        let score = loop {
-            candys.iter_mut().for_each(|c| c.regenerate());
-
-            match control() {
-                Control::Left => snake.set_direction(Direction::Left),
-                Control::Right => snake.set_direction(Direction::Right),
-                Control::Down => snake.set_direction(Direction::Down),
-                Control::Up => snake.set_direction(Direction::Up),
-                Control::None => {}
-                Control::Exit => break None,
-            };
-            if snake.walk(&mut candys) {
-                break Some(snake.score());
-            }
-
-            view.all(
-                &self.walls,
-                candys.iter().filter_map(|c| c.coord),
-                &snake.body,
-            );
-        };
-
-        view.result(score);
-        return score;
+        return party.score();
     }
 
     /// Return true if the point is on a wall.
     fn on_wall(&self, (x, y): (usize, usize)) -> bool {
         self.walls.iter().any(move |w| w.over(x, y))
+    }
+}
+
+/// One party.
+pub struct Party<'a, V>
+where
+    V: View,
+{
+    board: &'a Board,
+    snake: Snake<'a>,
+    candys: Vec<Candy<'a>>,
+    view: &'a mut V,
+}
+impl<'a, V> Party<'a, V>
+where
+    V: View,
+{
+    /// Run one step of the game.
+    pub fn step(&mut self, control: Control) -> bool {
+        self.candys.iter_mut().for_each(|c| c.regenerate());
+
+        match control {
+            Control::Left => self.snake.set_direction(Direction::Left),
+            Control::Right => self.snake.set_direction(Direction::Right),
+            Control::Down => self.snake.set_direction(Direction::Down),
+            Control::Up => self.snake.set_direction(Direction::Up),
+            Control::None => {}
+            Control::Exit => {
+                self.print_score();
+                return false;
+            }
+        };
+        if self.snake.walk(&mut self.candys) {
+            self.print_score();
+            return false;
+        }
+
+        self.view.all(
+            &self.board.walls,
+            self.candys.iter().filter_map(|c| c.coord),
+            &self.snake.body,
+        );
+
+        return true;
+    }
+
+    fn print_score(&mut self) {
+        self.view.result(self.score());
+    }
+
+    /// Return the score, from snake length.
+    pub fn score(&self) -> Option<usize> {
+        Some(self.snake.score())
     }
 }
 
