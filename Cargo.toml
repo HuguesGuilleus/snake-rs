@@ -3,5 +3,6 @@
 
 members = [
 	"snake",
-    "snake-linux",
+	"snake-linux",
+	"snake-wasm",
 ]
