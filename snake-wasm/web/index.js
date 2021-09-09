@@ -60,7 +60,6 @@ async function main() {
 			break;
 		case ' ':
 		case 'Escape':
-			debugger;
 			if (ended) {
 				start();
 			} else if (stoped) {
