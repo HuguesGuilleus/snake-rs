@@ -6,7 +6,7 @@ var control = 0,
 
 async function main() {
 	const m = await WebAssembly.instantiateStreaming(fetch('snake.wasm'), {
-		env: {
+		js: {
 			random: function () {
 				return Math.random() * 0xFFFFFFFF;
 			},

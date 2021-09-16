@@ -9,6 +9,7 @@ static NONE_PARTY: &str =
 static mut BOARDANDTEXTVIEW: Option<(Board, TextView<fn(&str)>)> = None;
 static mut PARTY: Option<Party<'_, TextView<fn(&str)>>> = None;
 
+#[link(wasm_import_module = "js")]
 extern "C" {
     /// Get a random inbteger.
     fn random() -> u32;
