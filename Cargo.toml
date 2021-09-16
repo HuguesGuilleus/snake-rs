@@ -6,3 +6,7 @@ members = [
 	"snake-linux",
 	"snake-wasm",
 ]
+
+[profile.release]
+lto = true
+opt-level = 's'
